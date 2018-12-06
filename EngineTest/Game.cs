@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Drawing;
 using SharpDX.DXGI;
 using SharpDX.D3DCompiler;
+using SharpDX.RawInput;
 using D3D11 = SharpDX.Direct3D11;
 using SharpDX;
 using System.Windows.Forms;
@@ -21,12 +22,49 @@ using System.Windows.Forms;
 
 namespace EngineTest
 {
+    // A virtual keyboard that we keep updated with
+    // the key down/ups we get. So game can at any time
+    // ask if a key is down.
+    class Keyboard
+    {
+        bool[] keyboard = new bool[256];
+
+        internal bool IsDown(Keys key)
+        {
+            int id = (int)key;
+            if (id < 0 || id >= keyboard.Length)
+                return false;
+            return keyboard[id];
+        }
+
+        internal void SetDown(Keys key, bool down)
+        {
+            int id = (int)key;
+            if (id < 0 || id >= keyboard.Length)
+                return;
+            keyboard[id] = down;
+        }
+    }
+
     class Game : IDisposable
     {
         private RenderForm renderForm;
 
         private const int width = 1280;
         private const int height = 720;
+
+        // Mouse handling
+        private int deltaMouseX, deltaMouseY;
+
+        // Our virtual keyboard
+        Keyboard keyboard = new Keyboard();
+
+        // Freecam
+        Vector3 freeCamPos = new Vector3(0, 0, -10);
+        Vector3 freeCamLookDir;
+        float freeCamYaw = 0.0f;
+        float freeCamPitch = 0.0f;
+        float freeCamSpeed = 0.1f;
 
         private D3D11.Device d3dDevice;
         private D3D11.DeviceContext d3dDeviceContext;
@@ -118,6 +156,7 @@ namespace EngineTest
             InitializePrimitives();
             InitializeShaders();
             time = 0.0f;
+            Cursor.Hide();
             Console.WriteLine("Game initialized...");
         }
 
@@ -179,42 +218,104 @@ namespace EngineTest
             // Set up keyboard input
             renderForm.KeyDown += HandleKeyDown;
             renderForm.KeyUp += HandleKeyUp;
+            renderForm.MouseMove += HandleMouseMove;
 
             RenderLoop.Run(renderForm, RenderCallback);
         }
 
+        // We keep the mouse pointer forced at the center of
+        // the window all the time. This avoids us loosing
+        // focus. First frame is skipped as the cursor could
+        // be anywhere. After first frame we can calculate
+        // movement since last frame
+        private bool firstMouseMove = true;
+        private void HandleMouseMove(object sender, MouseEventArgs e)
+        {
+            var cent = new System.Drawing.Point(renderForm.Width / 2, renderForm.Height / 2);
+            if(!firstMouseMove)
+            {
+                deltaMouseX -= cent.X - e.X;
+                deltaMouseY -= cent.Y - e.Y;
+            }
+            firstMouseMove = false;
+            Cursor.Position = renderForm.PointToScreen(cent);
+        }
+
+        private void HandleMouseMoveRaw(object sender, MouseInputEventArgs e)
+        {
+            deltaMouseX += e.X;
+            deltaMouseY += e.Y;
+        }
+
         private void HandleKeyDown(object sender, KeyEventArgs e)
         {
+            // Hardcoded escape key!
             if (e.KeyCode == Keys.Escape)
                 renderForm.Close();
+
+            keyboard.SetDown(e.KeyCode, true);
         }
 
         private void HandleKeyUp(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Escape)
-                renderForm.Close();
+            keyboard.SetDown(e.KeyCode, false);
         }
 
         const float TORAD = (float)Math.PI / 180.0f;
+
+        // Tick the game world!
+        private void Tick()
+        {
+            // Update freecam yaw/pitch
+            freeCamPitch -= deltaMouseY * 0.001f;
+            freeCamPitch = MathUtil.Clamp(freeCamPitch, -80.0f * TORAD, 80.0f * TORAD);
+            freeCamYaw += deltaMouseX * 0.001f;
+            if (freeCamYaw > 2.0f * MathUtil.Pi) freeCamYaw -= 2.0f * MathUtil.Pi;
+            if (freeCamYaw < 0.0f) freeCamYaw += 2.0f * MathUtil.Pi;
+
+            // Create forward vector from yaw/pitch
+            Vector3 yawDir = new Vector3((float)Math.Sin(freeCamYaw), 0, (float)Math.Cos(freeCamYaw));
+            freeCamLookDir = (float)Math.Cos(freeCamPitch) * yawDir + (float)Math.Sin(freeCamPitch) * Vector3.Up;
+
+            // Calculate the vector pointing to the right when 
+            // looking out the camera
+            Vector3 right = Vector3.Cross(freeCamLookDir, Vector3.Up);
+
+            // Apply movement relative to camera
+            if (keyboard.IsDown(Keys.W))
+                freeCamPos += freeCamSpeed * freeCamLookDir;
+            if (keyboard.IsDown(Keys.S))
+                freeCamPos -= freeCamSpeed * freeCamLookDir;
+            if (keyboard.IsDown(Keys.A))
+                freeCamPos += freeCamSpeed * right;
+            if (keyboard.IsDown(Keys.D))
+                freeCamPos -= freeCamSpeed * right;
+        }
+
         private void Draw()
         {
             d3dDeviceContext.OutputMerger.SetRenderTargets(renderTargetView);
             d3dDeviceContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(32, (int)(100+100.0*Math.Sin(time)), 200));
 
-            // Matrices
-            var view = Matrix.LookAtLH(new Vector3(0, 0, -10), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
+            // Camera
+            var view = Matrix.LookAtLH(freeCamPos, freeCamPos + freeCamLookDir, new Vector3(0, 1, 0));
             var proj = Matrix.PerspectiveFovLH(45.0f * TORAD, (float)width / height, 0.1f, 100.0f);
 
             var viewProj = Matrix.Multiply(view, proj);
 
-            var worldViewProj = /*Matrix.RotationX(time) * Matrix.RotationY(time * 1.2f) * Matrix.RotationZ(time * 1.6f) **/ viewProj;
+            // Create ModelViewProjection for cube
+            var worldViewProj = Matrix.RotationX(time) * Matrix.RotationY(time * 1.2f) * Matrix.RotationZ(time * 1.6f) * viewProj;
             worldViewProj.Transpose();
-
             d3dDeviceContext.UpdateSubresource(ref worldViewProj, constantBuffer);
 
             var binding = new D3D11.VertexBufferBinding(cubeBuffer, Utilities.SizeOf<VertexColor>(), 0);
             d3dDeviceContext.InputAssembler.SetVertexBuffers(0, binding);
             d3dDeviceContext.Draw(cubeVertices.Count(), 0);
+
+            // Create ModelViewProjection for triangle
+            worldViewProj = Matrix.Translation(new Vector3(0, (float)Math.Sin(time), 0)) * viewProj;
+            worldViewProj.Transpose();
+            d3dDeviceContext.UpdateSubresource(ref worldViewProj, constantBuffer);
 
             binding = new D3D11.VertexBufferBinding(triangleBuffer, Utilities.SizeOf<VertexColor>(), 0);
             d3dDeviceContext.InputAssembler.SetVertexBuffers(0, binding);
@@ -225,8 +326,15 @@ namespace EngineTest
 
         private void RenderCallback()
         {
+            // Advance time
             time += 1.0f / 60.0f;
+
+            Tick();
             Draw();
+
+            // clear input
+            deltaMouseX = 0;
+            deltaMouseY = 0;
         }
 
         public void Dispose()
