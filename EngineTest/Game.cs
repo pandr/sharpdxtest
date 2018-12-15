@@ -22,6 +22,12 @@ using System.Windows.Forms;
 
 namespace EngineTest
 {
+    public class RenderObject
+    {
+        public Matrix transform;
+        public SharpDX.Color color;
+    }
+
     // A virtual keyboard that we keep updated with
     // the key down/ups we get. So game can at any time
     // ask if a key is down.
@@ -60,7 +66,7 @@ namespace EngineTest
         Keyboard keyboard = new Keyboard();
 
         // Freecam
-        Vector3 freeCamPos = new Vector3(0, 0, -10);
+        Vector3 freeCamPos = new Vector3(0, 0, -20);
         Vector3 freeCamLookDir;
         float freeCamYaw = 0.0f;
         float freeCamPitch = 0.0f;
@@ -71,6 +77,11 @@ namespace EngineTest
         private SwapChain swapChain;
         private D3D11.RenderTargetView renderTargetView;
 
+        private struct VertexShaderConstants
+        {
+            public Matrix modelViewProj;
+            public Vector4 color;
+        }
         private D3D11.VertexShader vertexShader;
         private D3D11.PixelShader pixelShader;
 
@@ -84,6 +95,7 @@ namespace EngineTest
 
         private Viewport viewport;
 
+        private List<RenderObject> renderObjects = new List<RenderObject>();
 
         private float time;
 
@@ -104,33 +116,33 @@ namespace EngineTest
 
         private VertexColor[] cubeVertices = new VertexColor[] {
             // Front
-            new VertexColor { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 0.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3(-1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 0.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 0.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 0.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 0.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 0.0f, 0.0f, 1.0f), },
+            new VertexColor { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3(-1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
             // Back
-            new VertexColor { position = new Vector3(-1.0f, -1.0f,  1.0f), color = new Color4(0.0f, 1.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(0.0f, 1.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3(-1.0f,  1.0f,  1.0f), color = new Color4(0.0f, 1.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3(-1.0f, -1.0f,  1.0f), color = new Color4(0.0f, 1.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(0.0f, 1.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(0.0f, 1.0f, 0.0f, 1.0f), },
+            new VertexColor { position = new Vector3(-1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3(-1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3(-1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
             // Top 
-            new VertexColor { position = new Vector3(-1.0f,  1.0f, -1.0f), color = new Color4(0.0f, 0.0f, 1.0f, 1.0f), },
-            new VertexColor { position = new Vector3(-1.0f,  1.0f,  1.0f), color = new Color4(0.0f, 0.0f, 1.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(0.0f, 0.0f, 1.0f, 1.0f), },
-            new VertexColor { position = new Vector3(-1.0f,  1.0f, -1.0f), color = new Color4(0.0f, 0.0f, 1.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(0.0f, 0.0f, 1.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(0.0f, 0.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3(-1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3(-1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3(-1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
             // Bottom
-            new VertexColor { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3(-1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 0.0f, 1.0f), },
+            new VertexColor { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3(-1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
             // Left
             new VertexColor { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
             new VertexColor { position = new Vector3(-1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
@@ -139,12 +151,12 @@ namespace EngineTest
             new VertexColor { position = new Vector3(-1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
             new VertexColor { position = new Vector3(-1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
             // Bottom
-            new VertexColor { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(0.0f, 0.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(0.0f, 0.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(0.0f, 0.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(0.0f, 0.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(0.0f, 0.0f, 0.0f, 1.0f), },
-            new VertexColor { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(0.0f, 0.0f, 0.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
+            new VertexColor { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), },
         };
 
         public Game()
@@ -158,6 +170,20 @@ namespace EngineTest
             time = 0.0f;
             Cursor.Hide();
             Console.WriteLine("Game initialized...");
+
+            // Create test objects with random position, scale and rotation. 
+            var r = new Random();
+            for(int i = 0; i < 100; i++)
+            {
+                var scaleMat = Matrix.Scaling(r.NextVector3(Vector3.One * 0.2f, Vector3.One * 3.0f));
+                var rotMat = Matrix.RotationYawPitchRoll(r.NextFloat(0, 0), r.NextFloat(-.1f, .1f), r.NextFloat(-.1f, .1f));
+                var translateMat = Matrix.Translation(r.NextVector3(Vector3.One * (-5.0f), Vector3.One * 5.0f));
+
+                var ro = new RenderObject();
+                ro.transform = scaleMat * rotMat * translateMat;
+                ro.color = r.NextColor();
+                renderObjects.Add(ro);
+            }
         }
 
         private void InitializeShaders()
@@ -172,12 +198,11 @@ namespace EngineTest
                 pixelShader = new D3D11.PixelShader(d3dDevice, pixelShaderCode);
             }
 
-            constantBuffer = new D3D11.Buffer(d3dDevice, Utilities.SizeOf<Matrix>(), D3D11.ResourceUsage.Default, D3D11.BindFlags.ConstantBuffer, D3D11.CpuAccessFlags.None, D3D11.ResourceOptionFlags.None, 0);
+            constantBuffer = new D3D11.Buffer(d3dDevice, Utilities.SizeOf<VertexShaderConstants>(), D3D11.ResourceUsage.Default, D3D11.BindFlags.ConstantBuffer, D3D11.CpuAccessFlags.None, D3D11.ResourceOptionFlags.None, 0);
             d3dDeviceContext.VertexShader.SetConstantBuffer(0, constantBuffer);
             d3dDeviceContext.VertexShader.Set(vertexShader);
             d3dDeviceContext.PixelShader.Set(pixelShader);
             d3dDeviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
-
 
             inputLayout = new D3D11.InputLayout(d3dDevice, inputSignature, inputElements);
             d3dDeviceContext.InputAssembler.InputLayout = inputLayout;
@@ -205,6 +230,57 @@ namespace EngineTest
             {
                 renderTargetView = new D3D11.RenderTargetView(d3dDevice, backBuffer);
             }
+
+            // Create depth buffer. This is a 'texture' where the actual depth values of
+            // each pixel is stored
+            D3D11.Texture2DDescription depthStencilDescription = new D3D11.Texture2DDescription
+            {
+                Format = Format.D32_Float_S8X24_UInt,
+                ArraySize = 1,
+                MipLevels = 1,
+                Width = width,
+                Height = height,
+                SampleDescription = swapChain.Description.SampleDescription,
+                Usage = D3D11.ResourceUsage.Default,
+                BindFlags = D3D11.BindFlags.DepthStencil,
+            };
+            var depthStencil = new D3D11.Texture2D(d3dDevice, depthStencilDescription);
+
+            // Create stencil state description.
+            var depthStencilStateDesc = new D3D11.DepthStencilStateDescription
+            {
+                IsDepthEnabled = true,
+                DepthWriteMask = D3D11.DepthWriteMask.All,
+                DepthComparison = D3D11.Comparison.Less,
+                IsStencilEnabled = true,
+                StencilReadMask = 0xff,
+                StencilWriteMask = 0xff,
+                FrontFace = new D3D11.DepthStencilOperationDescription
+                {
+                    Comparison = D3D11.Comparison.Always,
+                    PassOperation = D3D11.StencilOperation.Keep,
+                    DepthFailOperation = D3D11.StencilOperation.Increment,
+                    FailOperation = D3D11.StencilOperation.Keep
+                },
+                BackFace = new D3D11.DepthStencilOperationDescription
+                {
+                    Comparison = D3D11.Comparison.Always,
+                    PassOperation = D3D11.StencilOperation.Keep,
+                    DepthFailOperation = D3D11.StencilOperation.Decrement,
+                    FailOperation = D3D11.StencilOperation.Keep
+                },
+            };
+            var depthStencilState = new D3D11.DepthStencilState(d3dDevice, depthStencilStateDesc);
+
+            // Create depth stencil view
+            depthStencilView = new D3D11.DepthStencilView(d3dDevice, depthStencil, new D3D11.DepthStencilViewDescription
+            {
+                Dimension = D3D11.DepthStencilViewDimension.Texture2D,
+                Format = Format.D32_Float_S8X24_UInt,
+            });
+
+            d3dDeviceContext.OutputMerger.DepthStencilState = depthStencilState;
+            d3dDeviceContext.OutputMerger.SetRenderTargets(depthStencilView, renderTargetView);
         }
 
         private void InitializePrimitives()
@@ -229,6 +305,8 @@ namespace EngineTest
         // be anywhere. After first frame we can calculate
         // movement since last frame
         private bool firstMouseMove = true;
+        private D3D11.DepthStencilView depthStencilView;
+
         private void HandleMouseMove(object sender, MouseEventArgs e)
         {
             var cent = new System.Drawing.Point(renderForm.Width / 2, renderForm.Height / 2);
@@ -294,8 +372,8 @@ namespace EngineTest
 
         private void Draw()
         {
-            d3dDeviceContext.OutputMerger.SetRenderTargets(renderTargetView);
-            d3dDeviceContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(32, (int)(100+100.0*Math.Sin(time)), 200));
+            d3dDeviceContext.ClearRenderTargetView(renderTargetView, new SharpDX.Color(32, 32, 64));
+            d3dDeviceContext.ClearDepthStencilView(depthStencilView, D3D11.DepthStencilClearFlags.Depth | D3D11.DepthStencilClearFlags.Stencil, 1.0f, 0);
 
             // Camera
             var view = Matrix.LookAtLH(freeCamPos, freeCamPos + freeCamLookDir, new Vector3(0, 1, 0));
@@ -303,23 +381,20 @@ namespace EngineTest
 
             var viewProj = Matrix.Multiply(view, proj);
 
-            // Create ModelViewProjection for cube
-            var worldViewProj = Matrix.RotationX(time) * Matrix.RotationY(time * 1.2f) * Matrix.RotationZ(time * 1.6f) * viewProj;
-            worldViewProj.Transpose();
-            d3dDeviceContext.UpdateSubresource(ref worldViewProj, constantBuffer);
-
             var binding = new D3D11.VertexBufferBinding(cubeBuffer, Utilities.SizeOf<VertexColor>(), 0);
             d3dDeviceContext.InputAssembler.SetVertexBuffers(0, binding);
-            d3dDeviceContext.Draw(cubeVertices.Count(), 0);
 
-            // Create ModelViewProjection for triangle
-            worldViewProj = Matrix.Translation(new Vector3(0, (float)Math.Sin(time), 0)) * viewProj;
-            worldViewProj.Transpose();
-            d3dDeviceContext.UpdateSubresource(ref worldViewProj, constantBuffer);
+            VertexShaderConstants c;
+            for(int i = 0; i < renderObjects.Count; i++)
+            {
+                var o = renderObjects[i];
+                c.modelViewProj = o.transform * viewProj;
+                c.modelViewProj.Transpose();
+                c.color = o.color.ToVector4();
 
-            binding = new D3D11.VertexBufferBinding(triangleBuffer, Utilities.SizeOf<VertexColor>(), 0);
-            d3dDeviceContext.InputAssembler.SetVertexBuffers(0, binding);
-            d3dDeviceContext.Draw(triangleVertices.Count(), 0);
+                d3dDeviceContext.UpdateSubresource(ref c, constantBuffer);
+                d3dDeviceContext.Draw(cubeVertices.Count(), 0);
+            }
 
             swapChain.Present(1, PresentFlags.None);
         }
