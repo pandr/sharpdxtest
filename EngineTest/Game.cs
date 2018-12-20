@@ -11,6 +11,7 @@ using SharpDX.RawInput;
 using D3D11 = SharpDX.Direct3D11;
 using SharpDX;
 using System.Windows.Forms;
+using SharpDX.WIC;
 
 /// <summary>
 /// TOOD:
@@ -165,6 +166,7 @@ namespace EngineTest
             renderForm.AllowUserResizing = false;
             InitializeDeviceResources();
             InitializePrimitives();
+            InitializeTextures();
             InitializeShaders();
             time = 0.0f;
             Cursor.Hide();
@@ -185,6 +187,53 @@ namespace EngineTest
             }
         }
 
+        private void InitializeTextures()
+        {
+            // Setup standard sampler
+            samplerState = new D3D11.SamplerState(d3dDevice, new D3D11.SamplerStateDescription()
+            {
+                AddressU = D3D11.TextureAddressMode.Wrap,
+                AddressV = D3D11.TextureAddressMode.Wrap,
+                AddressW = D3D11.TextureAddressMode.Wrap,
+                Filter = D3D11.Filter.MinMagMipLinear
+            });
+
+            imagingFactory = new SharpDX.WIC.ImagingFactory();
+
+            // Load textures. For now just one test texture
+            textureView = LoadTexture("texture.png");
+        }
+
+        private D3D11.ShaderResourceView LoadTexture(string name)
+        {
+            var converter = new SharpDX.WIC.FormatConverter(imagingFactory);
+            var decoder = new SharpDX.WIC.BitmapDecoder(imagingFactory, name, SharpDX.WIC.DecodeOptions.CacheOnDemand);
+            converter.Initialize(decoder.GetFrame(0), SharpDX.WIC.PixelFormat.Format32bppBGRA, SharpDX.WIC.BitmapDitherType.None, null, 0.0, SharpDX.WIC.BitmapPaletteType.Custom);
+
+            var stride = converter.Size.Width * 4;
+            var size = converter.Size.Height * stride;
+            var dataStream = new SharpDX.DataStream(size, true, true);
+            converter.CopyPixels(stride, dataStream);
+            D3D11.Texture2D tex = new D3D11.Texture2D(d3dDevice,
+                new D3D11.Texture2DDescription()
+                {
+                    Width = converter.Size.Width,
+                    Height = converter.Size.Height,
+                    ArraySize = 1,
+                    BindFlags = D3D11.BindFlags.ShaderResource,
+                    Usage = D3D11.ResourceUsage.Immutable,
+                    CpuAccessFlags = D3D11.CpuAccessFlags.None,
+                    Format = Format.B8G8R8A8_UNorm,
+                    MipLevels = 1,
+                    OptionFlags = D3D11.ResourceOptionFlags.None,
+                    SampleDescription = new SampleDescription(1, 0),
+                },
+                new SharpDX.DataRectangle(dataStream.DataPointer, stride)
+            );
+
+            return new D3D11.ShaderResourceView(d3dDevice, tex);
+        }
+
         private void InitializeShaders()
         {
             using (var vertexShaderCode = ShaderBytecode.CompileFromFile("vertex_shader.hlsl", "main", "vs_4_0", ShaderFlags.Debug))
@@ -201,6 +250,8 @@ namespace EngineTest
             d3dDeviceContext.VertexShader.SetConstantBuffer(0, constantBuffer);
             d3dDeviceContext.VertexShader.Set(vertexShader);
             d3dDeviceContext.PixelShader.Set(pixelShader);
+            d3dDeviceContext.PixelShader.SetShaderResource(0, textureView);
+            d3dDeviceContext.PixelShader.SetSampler(0, samplerState);
             d3dDeviceContext.InputAssembler.PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology.TriangleList;
 
             inputLayout = new D3D11.InputLayout(d3dDevice, inputSignature, inputElements);
@@ -305,6 +356,9 @@ namespace EngineTest
         // movement since last frame
         private bool firstMouseMove = true;
         private D3D11.DepthStencilView depthStencilView;
+        private D3D11.ShaderResourceView textureView;
+        private D3D11.SamplerState samplerState;
+        private ImagingFactory imagingFactory;
 
         private void HandleMouseMove(object sender, MouseEventArgs e)
         {

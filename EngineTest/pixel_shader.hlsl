@@ -6,9 +6,11 @@ struct vs_out
 	float2 uv : TEXCOORD0;
 };
 
+Texture2D tex;
+SamplerState texSampler;
 
 float4 main(vs_out input) : SV_TARGET
 {
-	float center = 1.0 - length(input.uv*2.0 - 1.0);
-	return input.color * center;
+	float4 texCol = tex.Sample(texSampler, input.uv);
+	return input.color * texCol;
 }
