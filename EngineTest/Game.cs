@@ -116,26 +116,26 @@ namespace EngineTest
 
         private Vertex[] cubeVertices = new Vertex[] {
             // Front
-            new Vertex { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(-1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 1) },
-            new Vertex { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
-            new Vertex { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
-            new Vertex { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
-            new Vertex { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 0) },
-            // Back
-            new Vertex { position = new Vector3(-1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
-            new Vertex { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
-            new Vertex { position = new Vector3(-1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 1) },
-            new Vertex { position = new Vector3(-1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
-            new Vertex { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 0) },
-            new Vertex { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
-            // Top 
+            new Vertex { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 1) },
             new Vertex { position = new Vector3(-1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(-1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 1) },
-            new Vertex { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
-            new Vertex { position = new Vector3(-1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
-            new Vertex { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
             new Vertex { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 0) },
+            new Vertex { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 1) },
+            new Vertex { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 0) },
+            new Vertex { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
+            // Back
+            new Vertex { position = new Vector3(-1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
+            new Vertex { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
+            new Vertex { position = new Vector3(-1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 0) },
+            new Vertex { position = new Vector3(-1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
+            new Vertex { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 1) },
+            new Vertex { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
+            // Top 
+            new Vertex { position = new Vector3(-1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 0) },
+            new Vertex { position = new Vector3(-1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
+            new Vertex { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 1) },
+            new Vertex { position = new Vector3(-1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 0) },
+            new Vertex { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 1) },
+            new Vertex { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
             // Bottom
             new Vertex { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
             new Vertex { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
@@ -144,19 +144,19 @@ namespace EngineTest
             new Vertex { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 0) },
             new Vertex { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
             // Left
-            new Vertex { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
+            new Vertex { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
             new Vertex { position = new Vector3(-1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 1) },
-            new Vertex { position = new Vector3(-1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
-            new Vertex { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
-            new Vertex { position = new Vector3(-1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
+            new Vertex { position = new Vector3(-1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
+            new Vertex { position = new Vector3(-1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
+            new Vertex { position = new Vector3(-1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
             new Vertex { position = new Vector3(-1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 0) },
-            // Bottom
-            new Vertex { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
-            new Vertex { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
-            new Vertex { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 1) },
-            new Vertex { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
-            new Vertex { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 0) },
-            new Vertex { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
+            // Right
+            new Vertex { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 1) },
+            new Vertex { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 0) },
+            new Vertex { position = new Vector3( 1.0f, -1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 1) },
+            new Vertex { position = new Vector3( 1.0f, -1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 1) },
+            new Vertex { position = new Vector3( 1.0f,  1.0f, -1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(0, 0) },
+            new Vertex { position = new Vector3( 1.0f,  1.0f,  1.0f), color = new Color4(1.0f, 1.0f, 1.0f, 1.0f), uv = new Vector2(1, 0) },
         };
 
         public Game()
